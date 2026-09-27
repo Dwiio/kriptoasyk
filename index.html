@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Caesar Cipher · KriptoAsik</title>
+  <link rel="stylesheet" href="./shared/theme.css">
+</head>
+<body>
+<main class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="./"><div class="brand-mark">K</div><div><strong>KriptoAsik</strong><span>Belajar kriptografi secara interaktif</span></div></a>
+    <nav id="nav-slot"></nav>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">01 · Caesar Cipher</div>
+    <h1>Caesar Cipher</h1>
+    <p>Putar roda untuk melihat hubungan huruf asli dan huruf sandi secara langsung. Masukkan teks sendiri lalu jalankan proses untuk melihat perhitungan setiap karakter.</p>
+  </section>
+
+  <div class="workspace">
+    <div class="grid">
+      <div class="card wheel-card">
+        <div class="card-header wheel-heading">
+          <div><h3>Caesar Wheel</h3><p>Ring luar = huruf asli. Ring dalam = huruf hasil pergeseran.</p></div>
+          <span class="badge"><span id="wheelShift">0</span> shift</span>
+        </div>
+        <div class="wheel-wrap" id="wheelArea" aria-label="Caesar cipher wheel">
+          <div class="wheel outer" id="outerWheel" aria-hidden="true"></div>
+          <div class="wheel inner" id="innerWheel" role="slider" aria-label="Caesar shift wheel" tabindex="0"></div>
+          <div class="wheel-pointer" aria-hidden="true">▼</div>
+          <div class="wheel-center"><strong id="wheelCenterShift">0</strong><span>SHIFT</span></div>
+        </div>
+        <div class="wheel-controls"><button class="wheel-btn" id="minus" type="button">−</button><input id="shift" type="range" min="0" max="25" value="0" aria-label="Nilai shift Caesar"><button class="wheel-btn" id="plus" type="button">+</button></div>
+        <div class="wheel-hint">Tarik roda dalam, gunakan slider, atau tekan + / −.</div>
+      </div>
+
+      <div class="card">
+        <div class="segment"><button class="active" data-mode="encrypt">ENKRIPSI</button><button data-mode="decrypt">DEKRIPSI</button></div>
+        <div class="field"><label for="text">Teks</label><textarea id="text" placeholder="Contoh: KRIPTOGRAFI MODERN"></textarea></div>
+        <div class="notice"><strong>Konsep:</strong> setiap huruf dipetakan menjadi angka A=0 sampai Z=25, lalu digeser sesuai nilai <b>shift</b>.</div>
+        <button class="btn btn-primary" id="run">Jalankan Proses →</button>
+      </div>
+    </div>
+
+    <div class="grid caesar-results">
+      <div class="card">
+        <div class="card-header"><div><h3>Hasil Sandi</h3><p>Output dari pergeseran roda.</p></div><span class="badge" id="shiftBadge">shift 0</span></div>
+        <div class="output" id="output">—</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><h3>Proses Tiap Huruf</h3><p>Langkah perhitungan ditampilkan dari atas ke bawah.</p></div></div>
+        <div class="process-log" id="log"><div class="empty">Masukkan teks lalu jalankan proses.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="learning-card">
+    <div class="learning-title"><div class="eyebrow">Cara kerja</div><h2>Memahami Caesar Cipher</h2><p>Caesar Cipher termasuk kriptografi klasik. Nilai huruf diperlakukan sebagai angka 0–25 lalu digeser dengan kunci.</p></div>
+    <div class="learning-grid">
+      <div class="learning-step"><span>01</span><strong>Ubah huruf → angka</strong><p>A=0, B=1, C=2, …, Z=25.</p></div>
+      <div class="learning-step"><span>02</span><strong>Enkripsi</strong><p><code>E(x) = (x + k) mod 26</code></p></div>
+      <div class="learning-step"><span>03</span><strong>Dekripsi</strong><p><code>D(x) = (x − k) mod 26</code></p></div>
+      <div class="learning-step"><span>04</span><strong>Contoh</strong><p>Jika k=3, A → D. Jika X digeser 3, hasilnya A karena alfabet berputar kembali ke awal.</p></div>
+    </div>
+  </section>
+  <footer class="footer">KriptoAsik · Interactive Cryptography Lab</footer>
+</main>
+<script type="module" src="./shared/nav.js"></script>
+<script type="module">
+import {caesarProcess} from "./ciphers/caesar.js";
+import {playLog,clearLog} from "./shared/process-log.js";
+const outer=document.querySelector("#outerWheel"),inner=document.querySelector("#innerWheel"),shiftInput=document.querySelector("#shift"),shiftText=document.querySelector("#wheelShift"),centerShift=document.querySelector("#wheelCenterShift"),badge=document.querySelector("#shiftBadge"),text=document.querySelector("#text"),output=document.querySelector("#output"),log=document.querySelector("#log");
+let shift=0,mode="encrypt",drag=false,startX=0,startShift=0;
+function letters(el){el.innerHTML=Array.from({length:26},(_,i)=>`<span style="--i:${i}">${String.fromCharCode(65+i)}</span>`).join("")}
+letters(outer);letters(inner);
+function render(){inner.style.transform=`translate(-50%,-50%) rotate(${shift*13.8461538}deg)`;shiftInput.value=shift;shiftText.textContent=shift;centerShift.textContent=shift;badge.textContent=`shift ${shift}`}
+function setShift(value){shift=((Number(value)%26)+26)%26;render()}
+document.querySelector("#minus").onclick=()=>setShift(shift-1);document.querySelector("#plus").onclick=()=>setShift(shift+1);shiftInput.oninput=e=>setShift(e.target.value);
+inner.addEventListener("pointerdown",e=>{drag=true;startX=e.clientX;startShift=shift;inner.setPointerCapture(e.pointerId)});inner.addEventListener("pointermove",e=>{if(drag)setShift(startShift+Math.round((e.clientX-startX)/7))});inner.addEventListener("pointerup",()=>drag=false);inner.addEventListener("pointercancel",()=>drag=false);inner.addEventListener("keydown",e=>{if(e.key==="ArrowRight")setShift(shift+1);if(e.key==="ArrowLeft")setShift(shift-1)});
+document.querySelectorAll(".segment button").forEach(button=>button.onclick=()=>{document.querySelectorAll(".segment button").forEach(x=>x.classList.remove("active"));button.classList.add("active");mode=button.dataset.mode});
+document.querySelector("#run").onclick=async()=>{if(!text.value.trim()){output.textContent="Masukkan teks terlebih dahulu.";clearLog(log,"Belum ada teks yang diproses.");return}try{const r=caesarProcess(text.value,shift,mode);output.textContent=r.result;await playLog(log,r.steps)}catch(error){output.textContent=error.message;clearLog(log,error.message)}};
+render();
+</script>
+</body>
+</html>

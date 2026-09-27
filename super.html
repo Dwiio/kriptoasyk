@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Super Encryption · KriptoAsik</title>
+<link rel="stylesheet" href="./shared/theme.css">
+</head>
+<body>
+<main class="app-shell">
+<header class="topbar">
+  <a class="brand" href="./"><div class="brand-mark">K</div><div><strong>KriptoAsik</strong><span>Belajar kriptografi secara interaktif</span></div></a>
+  <nav id="nav-slot"></nav>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">05 · Super Encryption</div>
+  <h1>Super Enkripsi</h1>
+  <p>Gabungan empat algoritma sesuai tugas: <b>Caesar → Vigenère → XOR → LFSR</b>. Dekripsi dilakukan dengan urutan kebalikan agar setiap lapisan dapat dibuka kembali.</p>
+</section>
+
+<div class="workspace-single">
+  <div class="card">
+    <div class="segment">
+      <button class="active" data-mode="encrypt">ENKRIPSI</button>
+      <button data-mode="decrypt">DEKRIPSI</button>
+    </div>
+
+    <div class="super-form">
+      <div class="field">
+        <label for="text">Input</label>
+        <textarea id="text" placeholder="Masukkan teks asli untuk enkripsi."></textarea>
+      </div>
+
+      <div class="super-keys">
+        <div class="field"><label for="shift">Caesar Key</label><input id="shift" type="number" min="0" max="25" value="3"></div>
+        <div class="field"><label for="xor">XOR Key</label><input id="xor" value="KEY"></div>
+        <div class="field"><label for="vig">Vigenère Key</label><input id="vig" value="KUNCI"></div>
+        <div class="field"><label for="seed">LFSR Seed</label><input id="seed" value="1111" maxlength="4" inputmode="numeric"></div>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>Urutan:</strong> Caesar → Vigenère → XOR → LFSR.
+      <br><strong>Dekripsi:</strong> LFSR → XOR → Vigenère → Caesar.
+      LFSR menggunakan feedback <b>b₄ = b₁ ⊕ b₄</b> seperti contoh pada materi.
+    </div>
+
+    <button class="btn btn-primary" id="run">Jalankan Proses →</button>
+  </div>
+
+  <div class="grid result-grid">
+    <div class="card">
+      <div class="card-header">
+        <div><h3>Hasil</h3><p id="resultHint">Output akhir ditampilkan sebagai hexadecimal.</p></div>
+      </div>
+      <div class="output" id="output">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><h3>Ringkasan</h3><p>Lapisan yang dilewati oleh pesan.</p></div>
+      </div>
+      <div class="stage-list" id="stages">
+        <div class="stage-row"><span>1</span><strong>Caesar</strong><em>Menunggu proses</em></div>
+        <div class="stage-row"><span>2</span><strong>Vigenère</strong><em>Menunggu proses</em></div>
+        <div class="stage-row"><span>3</span><strong>XOR Bitwise</strong><em>Menunggu proses</em></div>
+        <div class="stage-row"><span>4</span><strong>LFSR Stream</strong><em>Menunggu proses</em></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card process-card">
+    <div class="card-header">
+      <div><h3>Halaman Proses / Detail Langkah</h3><p>Setiap lapisan ditampilkan sebelum masuk ke lapisan berikutnya.</p></div>
+      <span class="badge">4 algoritma</span>
+    </div>
+    <div class="process-log tall" id="log"><div class="empty">Jalankan proses untuk melihat detail setiap lapisan.</div></div>
+  </div>
+</div>
+
+<section class="learning-card">
+  <div class="learning-title">
+    <div class="eyebrow">Konsep super enkripsi</div>
+    <h2>Kenapa ada empat lapisan?</h2>
+    <p>Tujuan menu ini adalah memperlihatkan bagaimana beberapa transformasi kriptografi dapat dirangkai. Setiap lapisan mempunyai peran dan bentuk data yang berbeda.</p>
+  </div>
+  <div class="learning-grid">
+    <div class="learning-step"><span>01</span><strong>Caesar</strong><p>Substitusi sederhana dengan pergeseran alfabet.</p></div>
+    <div class="learning-step"><span>02</span><strong>Vigenère</strong><p>Pergeseran alfabet berubah mengikuti kata kunci.</p></div>
+    <div class="learning-step"><span>03</span><strong>XOR</strong><p>Byte hasil Vigenère diproses menggunakan operasi XOR.</p></div>
+    <div class="learning-step"><span>04</span><strong>LFSR</strong><p>Keystream dibangkitkan lalu di-XOR-kan lagi pada level bit.</p></div>
+  </div>
+</section>
+
+<footer class="footer">KriptoAsik · Interactive Cryptography Lab</footer>
+</main>
+
+<script type="module" src="./shared/nav.js"></script>
+<script type="module">
+import {superEncrypt,superDecrypt} from "./ciphers/super.js";
+import {playLog,clearLog} from "./shared/process-log.js";
+
+let mode="encrypt";
+const $=s=>document.querySelector(s);
+const output=$("#output");
+const log=$("#log");
+
+document.querySelectorAll(".segment button").forEach(button=>{
+  button.onclick=()=>{
+    document.querySelectorAll(".segment button").forEach(x=>x.classList.remove("active"));
+    button.classList.add("active");
+    mode=button.dataset.mode;
+    $("#text").placeholder=mode==="encrypt"
+      ?"Masukkan teks asli untuk enkripsi."
+      :"Masukkan cipher hex hasil enkripsi.";
+    $("#resultHint").textContent=mode==="encrypt"
+      ?"Output akhir ditampilkan sebagai hexadecimal."
+      :"Teks hasil dekripsi dikembalikan ke bentuk semula.";
+  };
+});
+
+function renderStages(stages){
+  $("#stages").innerHTML=stages.map((stage,index)=>`
+    <div class="stage-row">
+      <span>${index+1}</span>
+      <strong>${stage[0]}</strong>
+      <em>${stage[1]}</em>
+    </div>
+  `).join("");
+}
+
+$("#run").onclick=async()=>{
+  try{
+    const args=[$("#text").value,$("#shift").value,$("#vig").value,$("#xor").value,$("#seed").value];
+    const r=mode==="encrypt"?superEncrypt(...args):superDecrypt(...args);
+    output.textContent=r.result;
+    renderStages(r.stages);
+    await playLog(log,r.steps,30);
+  }catch(error){
+    output.textContent=error.message;
+    clearLog(log,error.message);
+  }
+};
+</script>
+</body>
+</html>

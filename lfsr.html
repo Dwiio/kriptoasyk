@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LFSR Stream Cipher · KriptoAsik</title>
+<link rel="stylesheet" href="./shared/theme.css">
+</head>
+<body>
+<main class="app-shell">
+<header class="topbar">
+  <a class="brand" href="./"><div class="brand-mark">K</div><div><strong>KriptoAsik</strong><span>Belajar kriptografi secara interaktif</span></div></a>
+  <nav id="nav-slot"></nav>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">04 · Modern Cipher</div>
+  <h1>LFSR Stream Cipher</h1>
+  <p>Bangkitkan keystream dengan Linear Feedback Shift Register lalu XOR-kan ke bit pesan. Sistem ini mengikuti contoh LFSR 4-bit pada materi: <b>b₄ = b₁ ⊕ b₄</b>.</p>
+</section>
+
+<div class="workspace-single">
+  <div class="card">
+    <div class="segment">
+      <button class="active" data-mode="encrypt">ENKRIPSI</button>
+      <button data-mode="decrypt">DEKRIPSI</button>
+    </div>
+
+    <div class="form-grid lfsr-form">
+      <div class="field">
+        <label for="text">Teks / Cipher Hex</label>
+        <textarea id="text" placeholder="Enkripsi: tulis teks di sini. Dekripsi: masukkan hex hasil enkripsi."></textarea>
+      </div>
+      <div>
+        <div class="field">
+          <label for="seed">Seed 4-bit</label>
+          <input id="seed" value="1111" maxlength="4" inputmode="numeric">
+          <small class="muted">Gunakan 4 bit dan jangan 0000. Contoh materi: 1111.</small>
+        </div>
+        <div class="notice">
+          <strong>Feedback:</strong> b₄ = b₁ ⊕ b₄.<br>
+          Bit keluaran diambil dari bit paling kanan, kemudian register digeser dan feedback masuk dari kiri.
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="run">Jalankan Proses →</button>
+  </div>
+
+  <div class="grid result-grid">
+    <div class="card">
+      <div class="card-header">
+        <div><h3>Hasil</h3><p id="resultHint">Cipherteks ditampilkan dalam hexadecimal.</p></div>
+      </div>
+      <div class="output" id="output">—</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><h3>Ringkasan</h3><p>Parameter utama proses LFSR.</p></div>
+      </div>
+      <div class="summary-list" id="summary">
+        <div><span>Seed</span><strong>1111</strong></div>
+        <div><span>Feedback</span><strong>b₄ = b₁ ⊕ b₄</strong></div>
+        <div><span>Periode</span><strong>2⁴ − 1 = 15</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card process-card">
+    <div class="card-header">
+      <div><h3>Halaman Proses / Detail Langkah</h3><p>State register, bit keluaran, feedback, dan XOR ditampilkan agar alurnya mudah dipresentasikan.</p></div>
+      <span class="badge">LFSR 4-bit</span>
+    </div>
+    <div class="process-log tall" id="log"><div class="empty">Jalankan proses untuk melihat detail langkah.</div></div>
+  </div>
+</div>
+
+<section class="learning-card">
+  <div class="learning-title">
+    <div class="eyebrow">Mengikuti materi</div>
+    <h2>Mengapa LFSR digunakan?</h2>
+    <p>Materi menjelaskan bahwa FSR merupakan keystream generator, sedangkan LFSR adalah salah satu contohnya. Keamanan cipher aliran bergantung pada kualitas keystream yang dibangkitkan.</p>
+  </div>
+  <div class="learning-grid">
+    <div class="learning-step"><span>01</span><strong>Register</strong><p>Register menyimpan state bit, di sini panjangnya 4 bit.</p></div>
+    <div class="learning-step"><span>02</span><strong>Feedback</strong><p>Bit baru dihitung dengan XOR b₁ dan b₄.</p></div>
+    <div class="learning-step"><span>03</span><strong>Keystream</strong><p>Bit keluaran dipakai sebagai kunci aliran.</p></div>
+    <div class="learning-step"><span>04</span><strong>XOR pesan</strong><p>Setiap bit pesan di-XOR dengan bit keystream yang bersesuaian.</p></div>
+  </div>
+</section>
+
+<footer class="footer">KriptoAsik · Interactive Cryptography Lab</footer>
+</main>
+
+<script type="module" src="./shared/nav.js"></script>
+<script type="module">
+import {lfsrProcess} from "./ciphers/lfsr.js";
+import {playLog,clearLog} from "./shared/process-log.js";
+
+let mode="encrypt";
+const $=s=>document.querySelector(s);
+const output=$("#output");
+const log=$("#log");
+
+document.querySelectorAll(".segment button").forEach(button=>{
+  button.onclick=()=>{
+    document.querySelectorAll(".segment button").forEach(x=>x.classList.remove("active"));
+    button.classList.add("active");
+    mode=button.dataset.mode;
+    $("#text").placeholder=mode==="encrypt"
+      ?"Enkripsi: tulis teks di sini."
+      :"Dekripsi: masukkan hex hasil enkripsi.";
+    $("#resultHint").textContent=mode==="encrypt"
+      ?"Cipherteks ditampilkan dalam hexadecimal."
+      :"Plainteks hasil dekripsi dikembalikan menjadi teks.";
+  };
+});
+
+$("#run").onclick=async()=>{
+  try{
+    const r=lfsrProcess($("#text").value,$("#seed").value,mode);
+    output.textContent=r.result;
+    $("#summary").innerHTML=`
+      <div><span>Seed</span><strong>${r.summary.seed}</strong></div>
+      <div><span>Feedback</span><strong>b₄ = b₁ ⊕ b₄</strong></div>
+      <div><span>Panjang bit</span><strong>${r.summary.length}</strong></div>
+      <div><span>Periode teoritis</span><strong>2⁴ − 1 = ${r.summary.period}</strong></div>
+    `;
+    await playLog(log,r.steps,18);
+  }catch(error){
+    output.textContent=error.message;
+    clearLog(log,error.message);
+  }
+};
+</script>
+</body>
+</html>
