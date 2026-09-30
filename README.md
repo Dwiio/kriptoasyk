@@ -1,6 +1,6 @@
 # 🔐 KriptoAsik
 
-**KriptoAsik** adalah aplikasi web edukasi interaktif yang dibuat untuk mempelajari dan memahami konsep **algoritma kriptografi** melalui simulasi enkripsi, dekripsi, serta proses perhitungan langkah demi langkah.
+**KriptoAsyk** adalah aplikasi web edukasi interaktif yang dibuat untuk mempelajari dan memahami konsep **algoritma kriptografi** melalui simulasi enkripsi, dekripsi, serta proses perhitungan langkah demi langkah.
 
 Project ini dirancang agar konsep kriptografi yang cukup abstrak dapat dipelajari secara lebih visual dan interaktif, mulai dari algoritma klasik hingga algoritma yang menggunakan operasi bit dan pembangkitan keystream.
 
